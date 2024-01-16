@@ -32,6 +32,8 @@ public class Transaction {
     this.data = jsonData;
   }
 
+  public Transaction() {}
+
   public String getData() {
     return this.data;
   }

@@ -1,4 +1,4 @@
-/workspaces/codespaces-blank/src/main/java/bankmonitor/repository/TransactionRepository.java
-/workspaces/codespaces-blank/src/main/java/bankmonitor/model/Transaction.java
-/workspaces/codespaces-blank/src/main/java/bankmonitor/controller/TransactionController.java
-/workspaces/codespaces-blank/src/main/java/bankmonitor/TransactionApplication.java
+/scm/github/other/bankmonitor-swe-interview-1/src/main/java/bankmonitor/model/Transaction.java
+/scm/github/other/bankmonitor-swe-interview-1/src/main/java/bankmonitor/TransactionApplication.java
+/scm/github/other/bankmonitor-swe-interview-1/src/main/java/bankmonitor/controller/TransactionController.java
+/scm/github/other/bankmonitor-swe-interview-1/src/main/java/bankmonitor/repository/TransactionRepository.java
