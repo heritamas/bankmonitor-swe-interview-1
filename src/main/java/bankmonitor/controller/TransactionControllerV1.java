@@ -5,6 +5,8 @@ import bankmonitor.repository.LegacyTransactionRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import org.json.JSONObject;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -15,16 +17,23 @@ import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/v1/transactions")
-@RequiredArgsConstructor
 public class TransactionControllerV1 {
 
+    private final Logger logger = LoggerFactory.getLogger(TransactionControllerV1.class);
+    private final LegacyTransactionRepository transactionRepository;
+
     @Autowired
-    private LegacyTransactionRepository transactionRepository;
+    public TransactionControllerV1(LegacyTransactionRepository transactionRepository) {
+        this.transactionRepository = transactionRepository;
+    }
 
     @GetMapping
     @ResponseBody
     public List<Transaction> getAllTransactions() {
-        return transactionRepository.findAll();
+        var result = transactionRepository.findAll();
+        logger.info("Getting all transactions: {}", result);
+
+        return result;
     }
 
     @PostMapping

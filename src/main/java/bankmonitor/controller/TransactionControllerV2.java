@@ -1,11 +1,11 @@
 package bankmonitor.controller;
 
-import bankmonitor.model.TransactionUpdateDTO;
 import bankmonitor.model.TransactionDTO;
-import bankmonitor.model.TransactionV2;
+import bankmonitor.model.TransactionUpdateDTO;
+import bankmonitor.service.Conversions;
 import bankmonitor.service.TransactionService;
-import io.vavr.control.Either;
-import lombok.RequiredArgsConstructor;
+import io.vavr.control.Try;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
@@ -15,16 +15,23 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/v2/transactions")
-@RequiredArgsConstructor
 public class TransactionControllerV2 {
-    private TransactionService transactionService;
+    private final TransactionService transactionService;
+
+    private final Conversions conversions;
+
+    @Autowired
+    public TransactionControllerV2(TransactionService transactionService, Conversions conversions) {
+        this.transactionService = transactionService;
+        this.conversions = conversions;
+    }
 
     @GetMapping
-    public ResponseEntity<List<TransactionV2>> getAllTransactions() {
+    public ResponseEntity<List<TransactionDTO>> getAllTransactions() {
         return ResponseEntity.ok(transactionService
                         .getAllTransactions()
                         .stream()
-                        .map(Either::get)
+                        .flatMap(tr -> Try.of(() -> conversions.toDTO(tr)).toJavaStream())
                         .toList());
     }
 
@@ -42,6 +49,8 @@ public class TransactionControllerV2 {
         if (bindingResult.hasErrors()) {
             return ResponseEntity.badRequest().build();
         } else {
+            return null;
+            /*
             return transactionService.findTransactionById(id)
                     .map(transaction -> {
                         transaction.getData().setAmount(updateDTO.getAmount());
@@ -49,6 +58,8 @@ public class TransactionControllerV2 {
                         return ResponseEntity.ok(transactionService.saveTransaction(transaction));
                     })
                     .orElseGet(() -> ResponseEntity.notFound().build());
+
+             */
         }
     }
 

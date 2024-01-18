@@ -3,3 +3,4 @@ CREATE TABLE IF NOT EXISTS transaction (
   data VARCHAR(1000) NOT NULL,
   created_at TIMESTAMP NOT NULL default NOW()
 );
+

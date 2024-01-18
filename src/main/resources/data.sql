@@ -5,3 +5,6 @@ INSERT INTO transaction (id, data, created_at) VALUES
   (3, '{ "amount": -100, "reference": "BM_2023_101_BACK", "reason": "duplicate" }', NOW()),
   (4, '{ "amount": 12345, "reference": "BM_2023_105" }', NOW()),
   (5, '{ "amount": 54321, "sender": "Bankmonitor", "recipient": "John Doe" }', NOW());
+
+INSERT INTO transactiondata (id, amount, reference, sender, recipient, reason) VALUES
+  (1, 100, "theri_modified", "", NULL, NULL);

@@ -1,21 +1,24 @@
 package bankmonitor.controller;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
-
-import javax.servlet.http.HttpServletRequest;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+import org.springframework.web.servlet.view.RedirectView;
 
 @Controller
 @RequestMapping("/")
 @Deprecated
 public class TransactionController {
 
+	private final Logger logger = LoggerFactory.getLogger(TransactionController.class);
+
 	@RequestMapping(value = "/transactions/**")
-	public String redirect(HttpServletRequest request) {
+	public RedirectView redirect(RedirectAttributes attributes)  {
 		// redirect to /v1/transactions
-		String newUrl = request.getRequestURI().replace("/transactions", "/api/v1/transactions");
-		//response.sendRedirect(newUrl);
-		return "redirect:" + newUrl;
+		logger.info("Redirecting to /api/v1/transactions");
+		return new RedirectView("/api/v1/transactions", true);
 	}
 
 }
