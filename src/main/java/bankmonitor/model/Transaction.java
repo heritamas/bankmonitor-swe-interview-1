@@ -9,6 +9,7 @@ import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.Table;
 
+import lombok.SneakyThrows;
 import org.json.JSONObject;
 
 @Entity
@@ -32,8 +33,6 @@ public class Transaction {
     this.data = jsonData;
   }
 
-  public Transaction() {}
-
   public String getData() {
     return this.data;
   }
@@ -43,6 +42,7 @@ public class Transaction {
     return true;
   }
 
+  @SneakyThrows
   public Integer getAmount() {
     JSONObject jsonData = new JSONObject(this.data);
     if (jsonData.has("amount")) {
@@ -52,6 +52,7 @@ public class Transaction {
     }
   }
 
+  @SneakyThrows
   public String getReference() {
     JSONObject jsonData = new JSONObject(this.data);
     if (jsonData.has(REFERENCE_KEY)) {
