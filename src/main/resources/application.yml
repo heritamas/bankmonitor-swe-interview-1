@@ -20,3 +20,7 @@ spring:
         dialect: org.hibernate.dialect.PostgreSQLDialect
     hibernate:
       ddl-auto: update
+  logging:
+    level:
+      org.springframework.web: TRACE
+      web: TRACE

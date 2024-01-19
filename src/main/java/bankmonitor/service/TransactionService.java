@@ -8,6 +8,7 @@ import bankmonitor.model.TransactionData;
 import bankmonitor.model.TransactionV2;
 import bankmonitor.repository.TransactionDataRepository;
 import bankmonitor.repository.LegacyTransactionRepository;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import io.vavr.control.Either;
 import io.vavr.control.Try;
 import org.slf4j.Logger;
@@ -20,7 +21,7 @@ import java.util.List;
 @Service
 public class TransactionService {
 
-    private final Logger logger = LoggerFactory.getLogger(TransactionService.class);
+    private static final Logger logger = LoggerFactory.getLogger(TransactionService.class);
 
     private final TransactionDataRepository transactionDataRepository;
 
@@ -59,6 +60,7 @@ public class TransactionService {
 
     private TransactionV2 fetchById(Transaction tr) {
         var trd = transactionDataRepository.findById(tr.getId());
+        logger.info("Fetched transaction data: {}", trd);
         return TransactionV2.builder()
                 .id(tr.getId())
                 .timestamp(tr.getTimestamp())
@@ -78,27 +80,50 @@ public class TransactionService {
                 .toList();
     }
 
-    public Either<TransactionError, TransactionDTO> createTransaction(String jsonData) {
+    /**
+     * Create a new transaction from a DTO (basically JSON string data)
+     * @param dto
+     * @return structure describing the result of the operation
+     */
+    public Either<TransactionError, TransactionV2> saveTransaction(TransactionDTO dto) {
         // legacy part
-        var tr = legacyTransactionRepository.save(new Transaction(jsonData));
+        var tr = legacyTransactionRepository.save(new Transaction(dto.getData()));
         // transactionData part
-        var synced = syncFields(fetchById(tr));
-
-        return synced
-                .flatMap(tr2 ->
-                        Try.of(() -> conversions.toDTO(tr2))
-                            .toEither()
-                            .mapLeft(exc -> {
-                                logger.warn("Error while converting to DTO: {}", exc.getMessage());
-                                return new DTOError.InvalidJSON(exc.getMessage());
-                            })
-                );
+        return syncFields(fetchById(tr));
     }
 
-    public TransactionDTO saveTransaction(TransactionDTO transaction) {
-        //return transactionRepository.save(transaction);
-        return null;
+    /**
+     * Update an existing transaction described by transaction.
+     * @param tr2
+     * @return structure describing the result of the operation
+     */
+    public Either<TransactionError, TransactionV2> updateTransaction(TransactionV2 tr2) {
+        return Try.of(() -> {
+            // sync data field, tr2 is the source of truth
+            var json = conversions.toJSON(tr2.getTransactionData().getDetails());
+            tr2.setData(json);
+            var transaction = Transaction.builder()
+                    .id(tr2.getId())
+                    .timestamp(tr2.getTimestamp())
+                    .data(json)
+                    .build();
+            legacyTransactionRepository.save(transaction);
+            transactionDataRepository.save(tr2.getTransactionData());
+            return tr2;
+        })
+                .toEither()
+                .mapLeft(exc -> {
+                    logger.warn("Error while updating transaction: {}", exc.getMessage());
+                    if (exc instanceof JsonProcessingException) {
+                        // either we could not deserialize into JSON
+                        return new DTOError.InvalidJSON(exc.getMessage());
+                    } else {
+                        // or something else went wrong during the update
+                        return new DTOError.UpdateError(exc.getMessage());
+                    }
+                });
     }
+
 
     public Either<TransactionError, TransactionV2> findTransactionById(Long id) {
         var legacyTransaction = legacyTransactionRepository.findById(id);

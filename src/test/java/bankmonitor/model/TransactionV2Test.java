@@ -30,9 +30,9 @@ class TransactionV2Test {
         // expect no exception
         assertDoesNotThrow(() -> {
             var transaction = conversions.fromDTO(dto);
-            assertEquals(transaction.getTransactionData().getAmount(), -100);
-            assertEquals(transaction.getTransactionData().getReference(), "BM_2023_101_BACK");
-            assertEquals(transaction.getTransactionData().getReason(), "duplicate");
+            assertEquals(transaction.getTransactionData().getDetails().getAmount(), -100);
+            assertEquals(transaction.getTransactionData().getDetails().getReference(), "BM_2023_101_BACK");
+            assertEquals(transaction.getTransactionData().getDetails().getReason(), "duplicate");
         });
 
     }
@@ -43,9 +43,11 @@ class TransactionV2Test {
                 .id(1L)
                 .timestamp(LocalDateTime.now())
                 .transactionData(TransactionData.builder()
-                        .amount(-100)
-                        .reference("BM_2023_101_BACK")
-                        .reason("duplicate")
+                        .details(TransactionDataEmbeddable.builder()
+                                .amount(-100)
+                                .reference("BM_2023_101_BACK")
+                                .reason("duplicate")
+                                .build())
                         .build())
                 .build();
 

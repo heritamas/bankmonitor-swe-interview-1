@@ -6,5 +6,4 @@ INSERT INTO transaction (id, data, created_at) VALUES
   (4, '{ "amount": 12345, "reference": "BM_2023_105" }', NOW()),
   (5, '{ "amount": 54321, "sender": "Bankmonitor", "recipient": "John Doe" }', NOW());
 
-INSERT INTO transactiondata (id, amount, reference, sender, recipient, reason) VALUES
-  (1, 100, "theri_modified", "", NULL, NULL);
+DELETE FROM transactiondata;

@@ -19,7 +19,7 @@ import java.util.Optional;
 @RequestMapping("/api/v1/transactions")
 public class TransactionControllerV1 {
 
-    private final Logger logger = LoggerFactory.getLogger(TransactionControllerV1.class);
+    private static final Logger logger = LoggerFactory.getLogger(TransactionControllerV1.class);
     private final LegacyTransactionRepository transactionRepository;
 
     @Autowired

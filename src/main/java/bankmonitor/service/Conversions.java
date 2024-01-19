@@ -1,13 +1,18 @@
 package bankmonitor.service;
 
+import bankmonitor.error.TransactionError;
 import bankmonitor.model.TransactionDTO;
 import bankmonitor.model.TransactionData;
 import bankmonitor.model.TransactionDataEmbeddable;
 import bankmonitor.model.TransactionV2;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import io.vavr.control.Either;
+import io.vavr.control.Try;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+
+import java.util.function.Function;
 
 @Service
 public class Conversions {
@@ -19,6 +24,17 @@ public class Conversions {
         this.objectMapper = objectMapper;
     }
 
+    @FunctionalInterface
+    public interface ThrowingFunction<T, R, E extends Throwable> {
+        R apply(T t) throws E;
+    }
+
+    public <T, R, E extends Throwable> Function<T, Either<TransactionError, R>> lift(ThrowingFunction<T, R, E> func,
+                                                                                     Function <Throwable, TransactionError> errorSupplier) {
+        return t -> Try.of(() -> func.apply(t))
+                .toEither()
+                .mapLeft(errorSupplier);
+    }
 
     public TransactionV2 fromDTO(TransactionDTO dto) throws JsonProcessingException {
         TransactionV2.TransactionV2Builder builder = TransactionV2.builder();
@@ -46,12 +62,12 @@ public class Conversions {
         builder
                 .id(tr.getId())
                 .timestamp(tr.getTimestamp())
-                .data(toJSON(tr.getTransactionData()));
+                .data(toJSON(tr.getTransactionData().getDetails()));
 
         return builder.build();
     }
 
-    public String toJSON(TransactionData tr) throws JsonProcessingException {
+    public String toJSON(TransactionDataEmbeddable tr) throws JsonProcessingException {
         return objectMapper.writeValueAsString(tr);
     }
 }
