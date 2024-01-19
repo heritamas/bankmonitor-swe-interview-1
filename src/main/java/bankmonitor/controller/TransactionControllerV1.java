@@ -2,7 +2,6 @@ package bankmonitor.controller;
 
 import bankmonitor.model.Transaction;
 import bankmonitor.repository.LegacyTransactionRepository;
-import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import org.json.JSONObject;
 import org.slf4j.Logger;

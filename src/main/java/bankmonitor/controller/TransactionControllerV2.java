@@ -18,7 +18,6 @@ import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
 import java.util.List;
-import java.util.function.Function;
 
 @RestController
 @RequestMapping("/api/v2/transactions")
