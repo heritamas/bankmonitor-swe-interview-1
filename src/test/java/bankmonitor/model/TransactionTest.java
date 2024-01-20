@@ -11,6 +11,6 @@ public class TransactionTest {
     Transaction tr = new Transaction("{ \"reference\": \"foo\", \"amount\": 100}");
 
     assertEquals(tr.getReference(), "foo");
-    //assertEquals(tr.getAmount(), 300);
+    assertEquals(tr.getAmount(), 100);
   }
 }

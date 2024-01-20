@@ -6,20 +6,28 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import javax.persistence.*;
 import java.time.LocalDateTime;
 
 
+@Entity
+@Table(name = "transaction")
 @Data
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
 public class TransactionV2 {
 
+    @Id
     private Long id;
 
+    @Column(name = "created_at")
     private LocalDateTime timestamp;
 
+    @Column(name = "data")
     private String data;
 
+    @OneToOne
+    @PrimaryKeyJoinColumn(name = "id" , referencedColumnName = "id")
     private TransactionData transactionData;
 }

@@ -9,7 +9,6 @@ public class RequestLoggingFilterConfig {
 
     @Bean
     public CommonsRequestLoggingFilter logFilter() {
-        System.out.println("RequestLoggingFilterConfig.logFilter is at least called");
         CommonsRequestLoggingFilter filter = new CommonsRequestLoggingFilter();
         filter.setIncludeQueryString(true);
         filter.setIncludePayload(true);

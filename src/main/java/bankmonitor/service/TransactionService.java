@@ -6,8 +6,9 @@ import bankmonitor.model.Transaction;
 import bankmonitor.model.TransactionDTO;
 import bankmonitor.model.TransactionData;
 import bankmonitor.model.TransactionV2;
-import bankmonitor.repository.TransactionDataRepository;
 import bankmonitor.repository.LegacyTransactionRepository;
+import bankmonitor.repository.TransactionDataRepository;
+import bankmonitor.repository.TransactionV2Repository;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import io.vavr.control.Either;
 import io.vavr.control.Try;
@@ -17,21 +18,22 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Optional;
 
 @Service
 public class TransactionService {
 
     private static final Logger logger = LoggerFactory.getLogger(TransactionService.class);
 
-    private final TransactionDataRepository transactionDataRepository;
+    private final TransactionV2Repository transactionV2Repository;
 
     private final LegacyTransactionRepository legacyTransactionRepository;
 
     private final Conversions conversions;
 
     @Autowired
-    public TransactionService(TransactionDataRepository transactionDataRepository, LegacyTransactionRepository legacyTransactionRepository, Conversions conversions) {
-        this.transactionDataRepository = transactionDataRepository;
+    public TransactionService(TransactionV2Repository transactionV2Repository, LegacyTransactionRepository legacyTransactionRepository, Conversions conversions) {
+        this.transactionV2Repository = transactionV2Repository;
         this.legacyTransactionRepository = legacyTransactionRepository;
         this.conversions = conversions;
     }
@@ -40,16 +42,16 @@ public class TransactionService {
      * Anything read from the DB might have been modified by legacy code. It is this service's responsibility to
      * sync the fields of the DTO with the fields of the entity.
      */
-    private Either<TransactionError, TransactionV2> syncFields(TransactionV2 tr) {
+    private Either<TransactionError, TransactionV2> syncFields(TransactionV2 tr2) {
         return Try.of(() -> {
-            TransactionData fromJson = conversions.fromJson(tr.getId(), tr.getData());
-            TransactionData fromTransaction = tr.getTransactionData();
+            TransactionData fromJson = conversions.fromJson(tr2.getId(), tr2.getData());
+            TransactionData fromTransaction = tr2.getTransactionData();
             if (!fromJson.equals(fromTransaction)) {
-                logger.warn("Transaction data and JSON are out of sync for transaction {} : {} != {}", tr.getId(), tr.getData(), tr.getTransactionData());
-                tr.setTransactionData(fromJson);
-                transactionDataRepository.save(fromJson);
+                logger.warn("Transaction data and JSON are out of sync for transaction {} : {} != {}", tr2.getId(), tr2.getData(), tr2.getTransactionData());
+                tr2.setTransactionData(fromJson);
+                transactionV2Repository.save(tr2);
             }
-            return tr;
+            return tr2;
         })
                 .toEither()
                 .mapLeft(exc -> {
@@ -58,24 +60,15 @@ public class TransactionService {
                 });
     }
 
-    private TransactionV2 fetchById(Transaction tr) {
-        var trd = transactionDataRepository.findById(tr.getId());
-        logger.info("Fetched transaction data: {}", trd);
-        return TransactionV2.builder()
-                .id(tr.getId())
-                .timestamp(tr.getTimestamp())
-                .data(tr.getData())
-                .transactionData(trd.orElse(null))
-                .build();
+    private Optional<TransactionV2> fetchById(Transaction tr) {
+        return transactionV2Repository.findById(tr.getId());
     }
 
-
     public List<Either<TransactionError, TransactionV2>> getAllTransactions() {
-        var legacyTransactions = legacyTransactionRepository.findAll();
+        var joined = transactionV2Repository.findAll();
 
-        return legacyTransactions
+        return joined
                 .stream()
-                .map(this::fetchById)
                 .map(this::syncFields)
                 .toList();
     }
@@ -89,7 +82,9 @@ public class TransactionService {
         // legacy part
         var tr = legacyTransactionRepository.save(new Transaction(dto.getData()));
         // transactionData part
-        return syncFields(fetchById(tr));
+        return fetchById(tr)
+                .map(this::syncFields)
+                .orElse(Either.left(new DTOError.NotFound(tr.getId())));
     }
 
     /**
@@ -100,15 +95,8 @@ public class TransactionService {
     public Either<TransactionError, TransactionV2> updateTransaction(TransactionV2 tr2) {
         return Try.of(() -> {
             // sync data field, tr2 is the source of truth
-            var json = conversions.toJSON(tr2.getTransactionData().getDetails());
-            tr2.setData(json);
-            var transaction = Transaction.builder()
-                    .id(tr2.getId())
-                    .timestamp(tr2.getTimestamp())
-                    .data(json)
-                    .build();
-            legacyTransactionRepository.save(transaction);
-            transactionDataRepository.save(tr2.getTransactionData());
+            tr2.setData(conversions.toJSON(tr2.getTransactionData().getDetails()));
+            transactionV2Repository.save(tr2);
             return tr2;
         })
                 .toEither()
@@ -126,9 +114,8 @@ public class TransactionService {
 
 
     public Either<TransactionError, TransactionV2> findTransactionById(Long id) {
-        var legacyTransaction = legacyTransactionRepository.findById(id);
-        return legacyTransaction
-                .map(this::fetchById)
+        var joined = transactionV2Repository.findById(id);
+        return joined
                 .map(this::syncFields)
                 .orElseGet(() -> Either.left(new DTOError.NotFound(id)));
     }
