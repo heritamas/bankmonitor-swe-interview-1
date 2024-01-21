@@ -28,6 +28,6 @@ public class TransactionV2 {
     private String data;
 
     @OneToOne(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
-    @JoinColumn(name = "id", referencedColumnName = "id")
+    @PrimaryKeyJoinColumn(name = "id", referencedColumnName = "id")
     private TransactionData transactionData;
 }

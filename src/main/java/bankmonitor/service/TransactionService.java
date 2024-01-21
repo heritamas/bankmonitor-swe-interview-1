@@ -95,7 +95,6 @@ public class TransactionService {
      * @return structure describing the result of the operation
      */
     public Either<TransactionError, TransactionV2> saveTransaction(TransactionDataDTO createDTO) {
-        /*
         return Try.of(() -> {
             var json = conversions.toJSON(createDTO);
             var tr = legacyTransactionRepository.save(new Transaction(json));
@@ -110,21 +109,11 @@ public class TransactionService {
                     .build();
             })
                 .toEither()
-                .flatMap(this::syncJSONFromFields)
                 .mapLeft(exc -> {
                     logger.warn("Error while saving transaction: {}", exc.getMessage());
                     // or something went wrong during the save
                     return new DTOError.SaveError(exc.getMessage());
                 });
-         */
-        var transaction = TransactionV2.builder()
-                .timestamp(LocalDateTime.now())
-                .transactionData(TransactionData.builder()
-                        .details(createDTO)
-                        .build())
-                .build();
-
-        return syncJSONFromFields(transaction);
     }
 
     /**
@@ -155,7 +144,6 @@ public class TransactionService {
 
     public Either<TransactionError, TransactionV2> findTransactionById(Long id) {
         var joined = transactionV2Repository.findById(id);
-        System.out.println("joined = " + joined);
         return joined
                 .map(this::syncFieldsFromJSON)
                 .orElseGet(() -> Either.left(new DTOError.NotFound(id)));

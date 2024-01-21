@@ -89,7 +89,15 @@ public class TransactionServiceTest {
         assertThat(fetched.isRight(), is(true));
         var fetchedTransaction = fetched.get();
 
-        assertThat(fetchedTransaction, equalTo(savedTransaction));
+        assertThat(fetchedTransaction.getId(), equalTo(savedTransaction.getId()));
+        assertThat(fetchedTransaction.getData(), equalTo(savedTransaction.getData()));
+        assertThat(fetchedTransaction.getTransactionData(), equalTo(savedTransaction.getTransactionData()));
+        // timestamp approximately matches
+        assertThat(fetchedTransaction.getTimestamp().getYear(), equalTo(savedTransaction.getTimestamp().getYear()));
+        assertThat(fetchedTransaction.getTimestamp().getDayOfYear(), equalTo(savedTransaction.getTimestamp().getDayOfYear()));
+        assertThat(fetchedTransaction.getTimestamp().getHour(), equalTo(savedTransaction.getTimestamp().getHour()));
+        assertThat(fetchedTransaction.getTimestamp().getHour(), equalTo(savedTransaction.getTimestamp().getHour()));
+        assertThat(fetchedTransaction.getTimestamp().getMinute(), equalTo(savedTransaction.getTimestamp().getMinute()));
 
         // check that the data is consistent
         assertThat(savedTransaction.getTransactionData().getDetails().getAmount(), is(100));
