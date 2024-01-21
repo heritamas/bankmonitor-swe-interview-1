@@ -43,6 +43,8 @@ public class TransactionControllerV2 {
             response = new ApiErrorException(err.errorCode(), invalid.message());
         } else if (err instanceof DTOError.UpdateError update) {
             response = new ApiErrorException(err.errorCode(), update.message());
+        } else if (err instanceof DTOError.SaveError create) {
+            response = new ApiErrorException(err.errorCode(), create.message());
         }
 
         return response;

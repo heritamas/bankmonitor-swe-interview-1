@@ -10,8 +10,11 @@ import org.json.JSONObject;
 
 import javax.persistence.*;
 
+import static javax.persistence.InheritanceType.JOINED;
+
 @Entity
 @Table(name = "transaction")
+@Inheritance(strategy=JOINED)
 @Data
 @Builder
 @AllArgsConstructor

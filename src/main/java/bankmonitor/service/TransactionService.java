@@ -40,7 +40,7 @@ public class TransactionService {
             TransactionData fromJson = conversions.fromJson(tr2.getId(), tr2.getData());
             TransactionData fromFields = tr2.getTransactionData();
             if (!fromJson.equals(fromFields)) {
-                logger.warn("Transaction data and JSON are out of sync for transaction {} : {} != {}", tr2.getId(), tr2.getData(), tr2.getTransactionData().getDetails());
+                logger.warn("Transaction data and JSON are out of sync for transaction {} : {} != {}", tr2.getId(), tr2.getData(), tr2.getTransactionData());
                 tr2.setTransactionData(fromJson);
                 transactionV2Repository.save(tr2);
             }
@@ -58,7 +58,7 @@ public class TransactionService {
                     String fromFields = conversions.toJSON(tr2.getTransactionData().getDetails());
                     String fromJson = tr2.getData();
                     if (!fromFields.equals(fromJson)) {
-                        logger.warn("Transaction data and JSON are out of sync for transaction : {} != {}", tr2.getData(), tr2.getTransactionData().getDetails());
+                        logger.warn("Transaction data and JSON are out of sync for transaction : {} != {}", tr2.getData(), tr2.getTransactionData());
                         tr2.setData(fromFields);
                         transactionV2Repository.save(tr2);
                     }
@@ -91,10 +91,32 @@ public class TransactionService {
     /**
      * Create a new transaction from a DTO (basically JSON string data)
      * Anything created is new, and happens on the V2 API, so the sync is from transactionData (entity) to data (JSON).
-     * @param tr2 : transaction to be created
+     * @param createDTO : transaction to be created
      * @return structure describing the result of the operation
      */
     public Either<TransactionError, TransactionV2> saveTransaction(TransactionDataDTO createDTO) {
+        /*
+        return Try.of(() -> {
+            var json = conversions.toJSON(createDTO);
+            var tr = legacyTransactionRepository.save(new Transaction(json));
+            return TransactionV2.builder()
+                    .id(tr.getId())
+                    .timestamp(tr.getTimestamp())
+                    .data(json)
+                    .transactionData(TransactionData.builder()
+                            .id(tr.getId())
+                            .details(createDTO)
+                            .build())
+                    .build();
+            })
+                .toEither()
+                .flatMap(this::syncJSONFromFields)
+                .mapLeft(exc -> {
+                    logger.warn("Error while saving transaction: {}", exc.getMessage());
+                    // or something went wrong during the save
+                    return new DTOError.SaveError(exc.getMessage());
+                });
+         */
         var transaction = TransactionV2.builder()
                 .timestamp(LocalDateTime.now())
                 .transactionData(TransactionData.builder()

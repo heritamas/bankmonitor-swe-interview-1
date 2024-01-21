@@ -8,4 +8,7 @@ public sealed interface DTOError extends TransactionError {
         }
     }
     record UpdateError(String message) implements DTOError {  }
+
+    record SaveError (String message) implements DTOError {  }
+
 }

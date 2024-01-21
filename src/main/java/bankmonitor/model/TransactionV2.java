@@ -17,8 +17,8 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @AllArgsConstructor
 public class TransactionV2 {
-
     @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     @Column(name = "created_at")
@@ -28,6 +28,6 @@ public class TransactionV2 {
     private String data;
 
     @OneToOne(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
-    @PrimaryKeyJoinColumn(name = "id" , referencedColumnName = "id")
+    @JoinColumn(name = "id", referencedColumnName = "id")
     private TransactionData transactionData;
 }
