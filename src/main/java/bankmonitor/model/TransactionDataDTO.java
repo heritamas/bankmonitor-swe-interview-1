@@ -14,7 +14,7 @@ import javax.persistence.Embeddable;
 @AllArgsConstructor
 @NoArgsConstructor
 @Jacksonized
-public class TransactionDataEmbeddable {
+public class TransactionDataDTO {
     private Integer amount;
     private String reference;
     private String sender;

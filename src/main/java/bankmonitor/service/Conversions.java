@@ -3,18 +3,19 @@ package bankmonitor.service;
 import bankmonitor.error.TransactionError;
 import bankmonitor.model.TransactionDTO;
 import bankmonitor.model.TransactionData;
-import bankmonitor.model.TransactionDataEmbeddable;
+import bankmonitor.model.TransactionDataDTO;
 import bankmonitor.model.TransactionV2;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.vavr.control.Either;
 import io.vavr.control.Try;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
+import org.springframework.stereotype.Component;
 
 import java.util.function.Function;
 
-@Service
+
+@Component
 public class Conversions {
 
     private final ObjectMapper objectMapper;
@@ -49,10 +50,10 @@ public class Conversions {
     }
 
     public TransactionData fromJson(Long id, String json) throws JsonProcessingException {
-        var embeddable = objectMapper.readValue(json, TransactionDataEmbeddable.class);
+        var dataDTO = objectMapper.readValue(json, TransactionDataDTO.class);
         return TransactionData.builder()
                 .id(id)
-                .details(embeddable)
+                .details(dataDTO)
                 .build();
     }
 
@@ -67,7 +68,7 @@ public class Conversions {
         return builder.build();
     }
 
-    public String toJSON(TransactionDataEmbeddable tr) throws JsonProcessingException {
+    public String toJSON(TransactionDataDTO tr) throws JsonProcessingException {
         return objectMapper.writeValueAsString(tr);
     }
 }

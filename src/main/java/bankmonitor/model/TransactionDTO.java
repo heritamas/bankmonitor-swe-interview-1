@@ -1,6 +1,6 @@
 package bankmonitor.model;
 
-import lombok.AllArgsConstructor;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import lombok.Builder;
 import lombok.Data;
 import lombok.extern.jackson.Jacksonized;
@@ -17,5 +17,6 @@ public class TransactionDTO {
 	private LocalDateTime timestamp;
 
 	@NotBlank(message = "Data cannot be blank")
+	@JsonSerialize(using = LiteralSerializer.class)
 	private String data;
 }

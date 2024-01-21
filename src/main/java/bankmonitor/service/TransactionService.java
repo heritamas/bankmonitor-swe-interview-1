@@ -2,12 +2,8 @@ package bankmonitor.service;
 
 import bankmonitor.error.DTOError;
 import bankmonitor.error.TransactionError;
-import bankmonitor.model.Transaction;
-import bankmonitor.model.TransactionDTO;
-import bankmonitor.model.TransactionData;
-import bankmonitor.model.TransactionV2;
+import bankmonitor.model.*;
 import bankmonitor.repository.LegacyTransactionRepository;
-import bankmonitor.repository.TransactionDataRepository;
 import bankmonitor.repository.TransactionV2Repository;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import io.vavr.control.Either;
@@ -17,6 +13,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -38,16 +35,12 @@ public class TransactionService {
         this.conversions = conversions;
     }
 
-    /**
-     * Anything read from the DB might have been modified by legacy code. It is this service's responsibility to
-     * sync the fields of the DTO with the fields of the entity.
-     */
-    private Either<TransactionError, TransactionV2> syncFields(TransactionV2 tr2) {
+    private Either<TransactionError, TransactionV2> syncFieldsFromJSON(TransactionV2 tr2) {
         return Try.of(() -> {
             TransactionData fromJson = conversions.fromJson(tr2.getId(), tr2.getData());
-            TransactionData fromTransaction = tr2.getTransactionData();
-            if (!fromJson.equals(fromTransaction)) {
-                logger.warn("Transaction data and JSON are out of sync for transaction {} : {} != {}", tr2.getId(), tr2.getData(), tr2.getTransactionData());
+            TransactionData fromFields = tr2.getTransactionData();
+            if (!fromJson.equals(fromFields)) {
+                logger.warn("Transaction data and JSON are out of sync for transaction {} : {} != {}", tr2.getId(), tr2.getData(), tr2.getTransactionData().getDetails());
                 tr2.setTransactionData(fromJson);
                 transactionV2Repository.save(tr2);
             }
@@ -60,36 +53,61 @@ public class TransactionService {
                 });
     }
 
+    private Either<TransactionError, TransactionV2> syncJSONFromFields(TransactionV2 tr2) {
+        return Try.of(() -> {
+                    String fromFields = conversions.toJSON(tr2.getTransactionData().getDetails());
+                    String fromJson = tr2.getData();
+                    if (!fromFields.equals(fromJson)) {
+                        logger.warn("Transaction data and JSON are out of sync for transaction : {} != {}", tr2.getData(), tr2.getTransactionData().getDetails());
+                        tr2.setData(fromFields);
+                        transactionV2Repository.save(tr2);
+                    }
+                    return tr2;
+                })
+                .toEither()
+                .mapLeft(exc -> {
+                    logger.warn("Error while syncing fields: {}", exc.getMessage());
+                    return new DTOError.InvalidJSON(exc.getMessage());
+                });
+    }
+
     private Optional<TransactionV2> fetchById(Transaction tr) {
         return transactionV2Repository.findById(tr.getId());
     }
 
+    /**
+     * Anything read from the DB might have been modified by legacy code. It is this service's responsibility to
+     * sync the fields. In this case we sync from data (JSON) to transactionData (entity).
+     */
     public List<Either<TransactionError, TransactionV2>> getAllTransactions() {
         var joined = transactionV2Repository.findAll();
 
         return joined
                 .stream()
-                .map(this::syncFields)
+                .map(this::syncFieldsFromJSON)
                 .toList();
     }
 
     /**
      * Create a new transaction from a DTO (basically JSON string data)
-     * @param dto
+     * Anything created is new, and happens on the V2 API, so the sync is from transactionData (entity) to data (JSON).
+     * @param tr2 : transaction to be created
      * @return structure describing the result of the operation
      */
-    public Either<TransactionError, TransactionV2> saveTransaction(TransactionDTO dto) {
-        // legacy part
-        var tr = legacyTransactionRepository.save(new Transaction(dto.getData()));
-        // transactionData part
-        return fetchById(tr)
-                .map(this::syncFields)
-                .orElse(Either.left(new DTOError.NotFound(tr.getId())));
+    public Either<TransactionError, TransactionV2> saveTransaction(TransactionDataDTO createDTO) {
+        var transaction = TransactionV2.builder()
+                .timestamp(LocalDateTime.now())
+                .transactionData(TransactionData.builder()
+                        .details(createDTO)
+                        .build())
+                .build();
+
+        return syncJSONFromFields(transaction);
     }
 
     /**
      * Update an existing transaction described by transaction.
-     * @param tr2
+     * @param tr2 : DTO describing the transaction
      * @return structure describing the result of the operation
      */
     public Either<TransactionError, TransactionV2> updateTransaction(TransactionV2 tr2) {
@@ -115,8 +133,9 @@ public class TransactionService {
 
     public Either<TransactionError, TransactionV2> findTransactionById(Long id) {
         var joined = transactionV2Repository.findById(id);
+        System.out.println("joined = " + joined);
         return joined
-                .map(this::syncFields)
+                .map(this::syncFieldsFromJSON)
                 .orElseGet(() -> Either.left(new DTOError.NotFound(id)));
     }
 }

@@ -12,6 +12,8 @@ import org.springframework.boot.test.context.SpringBootTest;
 
 import java.time.LocalDateTime;
 
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.is;
 import static org.junit.jupiter.api.Assertions.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -20,6 +22,9 @@ class ConversionTest {
 
     @Autowired
     Conversions conversions;
+
+    @Autowired
+    ObjectMapper objectMapper;
 
     @Test
     void makeTransactionFromDTO() {
@@ -49,7 +54,7 @@ class ConversionTest {
                 .timestamp(LocalDateTime.now())
                 .transactionData(TransactionData.builder()
                         .id(1L)
-                        .details(TransactionDataEmbeddable.builder()
+                        .details(TransactionDataDTO.builder()
                                 .amount(-100)
                                 .reference("BM_2023_101_BACK")
                                 .reason("duplicate")
@@ -80,7 +85,22 @@ class ConversionTest {
                 }
                 """;
 
-        var embeddable= new  ObjectMapper().readValue(json, TransactionDataEmbeddable.class);
-        System.out.println(embeddable);
+        var embeddable = new  ObjectMapper().readValue(json, TransactionDataDTO.class);
+        assertThat(embeddable.getAmount(), is(100));
+        assertThat(embeddable.getReference(), is("test reference"));
+        assertThat(embeddable.getSender(), is("test sender"));
+        assertThat(embeddable.getRecipient(), is("test recipient"));
+        assertThat(embeddable.getReason(), is("test reason"));
+    }
+
+    @Test
+    public void deserializeDto() throws JsonProcessingException {
+        var dto = new TransactionDTO(1, LocalDateTime.now(),
+                """
+                    { "amount": -100, "reference": "BM_2023_101_BACK", "reason": "duplicate" }
+                    """);
+
+        var result = objectMapper.writeValueAsString(dto);
+        System.out.println("result = " + result);
     }
 }

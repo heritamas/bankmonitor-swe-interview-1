@@ -1,9 +1,8 @@
 package bankmonitor.service;
 
 import bankmonitor.model.Transaction;
-import bankmonitor.model.TransactionDTO;
+import bankmonitor.model.TransactionDataDTO;
 import bankmonitor.repository.LegacyTransactionRepository;
-import bankmonitor.repository.TransactionV2Repository;
 import io.vavr.control.Either;
 import org.json.JSONObject;
 import org.junit.jupiter.api.Test;
@@ -69,18 +68,13 @@ public class TransactionServiceTest {
     @Test
     public void testSaveTransaction() {
         // create a new transaction
-        var dto = TransactionDTO.builder()
-                .data("""
-                        {
-                            "amount": 100,
-                            "reference": "test reference",
-                            "sender": "test sender",
-                            "recipient": "test recipient",
-                            "reason": "test reason"
-                        }
-                        """)
+        var dto = TransactionDataDTO.builder()
+                .amount(100)
+                .reference("test reference")
+                .sender("test sender")
+                .recipient("test recipient")
+                .reason("test reason")
                 .build();
-
 
         // save it
         var saved = transactionService.saveTransaction(dto);
@@ -120,10 +114,12 @@ public class TransactionServiceTest {
         var tr = new Transaction(json);
         var saved = legacyTransactionRepository.save(tr);
 
+        // check that is can be refetched
         var fetched = transactionService.findTransactionById(saved.getId());
         assertThat(fetched.isRight(), is(true));
         var fetchedTransaction = fetched.get();
 
+        // check that the data is consistent with the original
         assertThat(fetchedTransaction.getTransactionData().getDetails().getAmount(), is(100));
         assertThat(fetchedTransaction.getTransactionData().getDetails().getReference(), is("test reference"));
         assertThat(fetchedTransaction.getTransactionData().getDetails().getSender(), is("test sender"));

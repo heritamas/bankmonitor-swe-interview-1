@@ -1,9 +1,9 @@
 package bankmonitor.controller;
 
+import bankmonitor.error.ApiErrorException;
 import bankmonitor.error.DTOError;
 import bankmonitor.error.TransactionError;
-import bankmonitor.model.TransactionDTO;
-import bankmonitor.model.TransactionUpdateDTO;
+import bankmonitor.model.*;
 import bankmonitor.service.Conversions;
 import bankmonitor.service.TransactionService;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -17,6 +17,7 @@ import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
+import java.time.LocalDateTime;
 import java.util.List;
 
 @RestController
@@ -33,35 +34,23 @@ public class TransactionControllerV2 {
         this.transactionService = transactionService;
         this.conversions = conversions;
     }
-    record ErrorResponse(Integer code, String message) {}
 
-    static String toJSON(ErrorResponse err) {
-        return Try
-            .of(() -> new ObjectMapper().writeValueAsString(err))
-            .recover(exc -> {
-                logger.error("Error while serializing error response: {}", exc.getMessage());
-                return "Unidentified error.";
-            }).get();
-    }
-
-    static ResponseEntity<String> mapError(TransactionError err) {
-        ErrorResponse response = new ErrorResponse(500, "Internal server error");
+    static ApiErrorException mapError(TransactionError err) {
+        ApiErrorException response = new ApiErrorException(500, "Internal server error");
         if (err instanceof DTOError.NotFound notfound) {
-            response = new ErrorResponse(err.errorCode(), "Transaction with id " + notfound.id() + " not found");
+            response = new ApiErrorException(err.errorCode(), "Transaction with id " + notfound.id() + " not found");
         } else if (err instanceof DTOError.InvalidJSON invalid) {
-            response = new ErrorResponse(err.errorCode(), invalid.message());
+            response = new ApiErrorException(err.errorCode(), invalid.message());
         } else if (err instanceof DTOError.UpdateError update) {
-            response = new ErrorResponse(err.errorCode(), update.message());
+            response = new ApiErrorException(err.errorCode(), update.message());
         }
 
-        return ResponseEntity
-                .status(response.code())
-                .body(toJSON(response));
+        return response;
     }
-    static ResponseEntity<String> mapResult(TransactionDTO dto) {
+    static ResponseEntity<TransactionDTO> mapResult(TransactionDTO dto) {
         return ResponseEntity
                 .ok()
-                .body(dto.getData());
+                .body(dto);
     }
 
     @GetMapping
@@ -75,25 +64,24 @@ public class TransactionControllerV2 {
                         .toList());
     }
 
-    @PostMapping
-    public ResponseEntity<String> createTransaction(@RequestBody @Valid TransactionDTO transaction, BindingResult bindingResult) {
+    @PostMapping(produces = "application/json")
+    public ResponseEntity<TransactionDTO> createTransaction(@RequestBody @Valid TransactionDataDTO createDTO, BindingResult bindingResult) throws ApiErrorException {
         if (bindingResult.hasErrors()) {
+            logger.error("Error while validating create: {}", bindingResult.getAllErrors());
             return ResponseEntity.badRequest().build();
         } else {
-            var saved = transactionService.saveTransaction(transaction);
+            var saved = transactionService.saveTransaction(createDTO);
             return saved
                     .flatMap(conversions.lift(conversions::toDTO, exc -> new DTOError.InvalidJSON(exc.getMessage())))
-                    .fold(
-                            TransactionControllerV2::mapError,
-                            TransactionControllerV2::mapResult
-                    );
-
+                    .map(TransactionControllerV2::mapResult)
+                    .getOrElseThrow(TransactionControllerV2::mapError);
         }
     }
 
-    @PutMapping("/{id}")
-    public ResponseEntity<String> updateTransaction(@PathVariable Long id, @RequestBody @Valid TransactionUpdateDTO updateDTO, BindingResult bindingResult) {
+    @PutMapping(path = "/{id}", produces = "application/json")
+    public ResponseEntity<TransactionDTO> updateTransaction(@PathVariable Long id, @RequestBody @Valid TransactionUpdateDTO updateDTO, BindingResult bindingResult) throws ApiErrorException {
         if (bindingResult.hasErrors()) {
+            logger.error("Error while validating update: {}", bindingResult.getAllErrors());
             return ResponseEntity.badRequest().build();
         } else {
             return transactionService.findTransactionById(id)
@@ -105,10 +93,8 @@ public class TransactionControllerV2 {
                                         .flatMap(conversions.lift(conversions::toDTO, exc -> new DTOError.InvalidJSON(exc.getMessage())));
                             }
                     )
-                    .fold(
-                            TransactionControllerV2::mapError,
-                            TransactionControllerV2::mapResult
-                    );
+                    .map(TransactionControllerV2::mapResult)
+                    .getOrElseThrow(TransactionControllerV2::mapError);
         }
     }
 

@@ -27,7 +27,7 @@ public class TransactionV2 {
     @Column(name = "data")
     private String data;
 
-    @OneToOne
+    @OneToOne(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
     @PrimaryKeyJoinColumn(name = "id" , referencedColumnName = "id")
     private TransactionData transactionData;
 }

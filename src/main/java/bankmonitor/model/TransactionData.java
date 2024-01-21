@@ -22,7 +22,7 @@ public class TransactionData {
     private Long id;
 
     @Embedded
-    private TransactionDataEmbeddable details;
+    private TransactionDataDTO details;
 }
 
 
