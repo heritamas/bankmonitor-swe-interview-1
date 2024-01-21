@@ -92,7 +92,8 @@ public class TransactionServiceTest {
         assertThat(fetchedTransaction.getId(), equalTo(savedTransaction.getId()));
         assertThat(fetchedTransaction.getData(), equalTo(savedTransaction.getData()));
         assertThat(fetchedTransaction.getTransactionData(), equalTo(savedTransaction.getTransactionData()));
-        // timestamp approximately matches
+
+        // timestamp just approximately matches (one comes from the saved, and im-memory preserved object, the other from the DB)
         assertThat(fetchedTransaction.getTimestamp().getYear(), equalTo(savedTransaction.getTimestamp().getYear()));
         assertThat(fetchedTransaction.getTimestamp().getDayOfYear(), equalTo(savedTransaction.getTimestamp().getDayOfYear()));
         assertThat(fetchedTransaction.getTimestamp().getHour(), equalTo(savedTransaction.getTimestamp().getHour()));
