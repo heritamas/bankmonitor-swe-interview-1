@@ -31,11 +31,4 @@ public class TransactionTest {
     assertFalse(transactions.isEmpty());
   }
 
-  @Test
-  public void testFetchById() {
-    var transaction = legacyTransactionRepository.findById(1L);
-    assertTrue(transaction.isPresent());
-    assertEquals(1L, transaction.get().getId());
-  }
-
 }

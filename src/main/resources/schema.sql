@@ -5,7 +5,7 @@ CREATE TABLE IF NOT EXISTS transaction (
 );
 
 CREATE TABLE IF NOT EXISTS transactiondata (
-  id INT NOT NULL PRIMARY KEY REFERENCES transaction(id),
+  id INT NOT NULL PRIMARY KEY REFERENCES transaction(id) ON DELETE CASCADE,
   amount INT,
   reference VARCHAR(100),
   sender VARCHAR(100),

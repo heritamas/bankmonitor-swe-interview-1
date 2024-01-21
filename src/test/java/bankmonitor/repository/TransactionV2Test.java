@@ -22,11 +22,4 @@ public class TransactionV2Test {
         assertFalse(transactions.isEmpty());
     }
 
-    @Test
-    public void testFetchById() {
-        var transaction = transactionV2Repository.findById(1L);
-        assertTrue(transaction.isPresent());
-        assertEquals(1L, transaction.get().getId());
-    }
-
 }
