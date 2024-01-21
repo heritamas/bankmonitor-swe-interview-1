@@ -2,10 +2,14 @@ package bankmonitor.model;
 
 import java.time.LocalDateTime;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonValue;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.SneakyThrows;
+import lombok.extern.jackson.Jacksonized;
 import org.json.JSONObject;
 
 import javax.persistence.*;
@@ -14,13 +18,32 @@ import static javax.persistence.InheritanceType.JOINED;
 
 @Entity
 @Table(name = "transaction")
-@Inheritance(strategy=JOINED)
 @Data
 @Builder
 @AllArgsConstructor
+@Jacksonized
 public class Transaction {
 
     public static final String REFERENCE_KEY = "reference";
+    public static final String AMOUNT_KEY = "amount";
+
+    private static String getJsonString(String jsonData, String key, String defaultValue) {
+        JSONObject jsonObject = new JSONObject(jsonData);
+        if (jsonObject.has(key)) {
+            return jsonObject.getString(key);
+        } else {
+            return defaultValue;
+        }
+    }
+
+    private static Integer getJsonInt(String jsonData, String key, Integer defaultValue) {
+        JSONObject jsonObject = new JSONObject(jsonData);
+        if (jsonObject.has(key)) {
+            return jsonObject.getInt(key);
+        } else {
+            return defaultValue;
+        }
+    }
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -52,20 +75,10 @@ public class Transaction {
     }
 
     public Integer getAmount() {
-        JSONObject jsonData = new JSONObject(this.data);
-        if (jsonData.has("amount")) {
-            return jsonData.getInt("amount");
-        } else {
-            return -1;
-        }
+        return Transaction.getJsonInt(this.data, AMOUNT_KEY, -1);
     }
 
     public String getReference() {
-        JSONObject jsonData = new JSONObject(this.data);
-        if (jsonData.has(REFERENCE_KEY)) {
-            return jsonData.getString(REFERENCE_KEY);
-        } else {
-            return "";
-        }
+        return Transaction.getJsonString(this.data, REFERENCE_KEY, "");
     }
 }

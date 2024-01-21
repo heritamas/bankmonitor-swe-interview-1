@@ -1,5 +1,6 @@
 package bankmonitor.model;
 
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import lombok.Builder;
 import lombok.Data;
@@ -18,5 +19,6 @@ public class TransactionDTO {
 
 	@NotBlank(message = "Data cannot be blank")
 	@JsonSerialize(using = LiteralSerializer.class)
+	@JsonDeserialize(using = LiteralDeserializer.class)
 	private String data;
 }

@@ -3,7 +3,6 @@ package bankmonitor.controller;
 
 import bankmonitor.error.DTOError;
 import bankmonitor.error.TransactionError;
-import bankmonitor.model.Transaction;
 import bankmonitor.model.TransactionData;
 import bankmonitor.model.TransactionDataDTO;
 import bankmonitor.model.TransactionV2;
@@ -12,6 +11,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.vavr.control.Either;
 import org.instancio.Instancio;
+import org.json.JSONObject;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -20,13 +20,17 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.MvcResult;
 
 import java.time.LocalDateTime;
 import java.util.stream.LongStream;
 
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.hasSize;
 import static org.instancio.Select.all;
 import static org.instancio.Select.field;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.BDDMockito.given;
@@ -122,7 +126,7 @@ public class ApiV2Test {
         });
 
     }
-
+    
     @Test
     void testGetAllTransactions() throws Exception {
         mvc
@@ -157,6 +161,4 @@ public class ApiV2Test {
                 .andExpect(jsonPath("$.data.reference").value("bar"))
                 .andExpect(jsonPath("$.data.amount").value(200));
     }
-
-
 }

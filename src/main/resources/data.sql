@@ -1,4 +1,4 @@
-DELETE FROM transaction;
+DELETE FROM transaction CASCADE;
 INSERT INTO transaction (id, data, created_at) VALUES
   (default, '{ "amount": 100, "reference": "BM_2023_101" }', NOW()),
   (default, '{ "amount": 3333, "reference": "", "sender": "Bankmonitor" }', NOW()),
@@ -6,4 +6,4 @@ INSERT INTO transaction (id, data, created_at) VALUES
   (default, '{ "amount": 12345, "reference": "BM_2023_105" }', NOW()),
   (default, '{ "amount": 54321, "sender": "Bankmonitor", "recipient": "John Doe" }', NOW());
 
-DELETE FROM transactiondata;
+--DELETE FROM transactiondata;

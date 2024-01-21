@@ -30,7 +30,7 @@ public class TransactionControllerV1 {
     @ResponseBody
     public List<Transaction> getAllTransactions() {
         var result = transactionRepository.findAll();
-        logger.info("Getting all transactions: {}", result);
+        logger.debug("Getting all transactions: {}", result);
 
         return result;
     }
@@ -57,8 +57,8 @@ public class TransactionControllerV1 {
         Transaction transaction = data.get();
         JSONObject trdata = new JSONObject(transaction.getData());
 
-        if (updateJson.has("amount")) {
-            trdata.put("amount", updateJson.getInt("amount"));
+        if (updateJson.has(Transaction.AMOUNT_KEY)) {
+            trdata.put(Transaction.AMOUNT_KEY, updateJson.getInt(Transaction.AMOUNT_KEY));
         }
 
         if (updateJson.has(Transaction.REFERENCE_KEY)) {
