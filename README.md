@@ -13,7 +13,7 @@ Az egyik legfontosabb kikötés a régi kliensek működésének megőrzése vol
 milyen viselkedésre számítanak a kliensek, de a következőket feltételezzük:
 
  * A kliensek a `/transactions/*` végponton keresztül kommunikálnak a szerverrel.
- * Ismerik a `Transaction` osztályt, és a annak (néha különös) viselkedését.
+ * Ismerik a `Transaction` osztályt, és annak (néha különös) viselkedését.
  * A `Transaction` osztályban a `data` mezőben egy JSON objektummá deszerializálható adat van.
 
 Mivel ezen túlmenően további információval nem rendelkezünk, ezért a létező viselkedést a 
@@ -23,7 +23,7 @@ lehető legnagyobb mértékben megpróbáljuk megőrizni.
 
 ### `Transaction` osztály
 
-Az eredeti `Transaction` osztályt csak minimálisan változtathatjuk meg, és gondosan vigyázunk rá hogy a 
+Az eredeti `Transaction` osztályt csak minimálisan változtathatjuk meg, és gondosan vigyázunk rá, hogy a 
 viselkedése ne változzon. Az osztály kapott pár "szokásos" annotációt, illetve rendezve lett a 
 JSON tartalmat feldolgozó metódusok szerkezete.
 
@@ -32,7 +32,7 @@ JSON tartalmat feldolgozó metódusok szerkezete.
 A régi `TransactionController` osztályt `@Deprecated` státuszt kapott, és két új osztályban
 valósítjuk meg a __REST__ API-t. A `TransactionControllerV1` osztály a régi kliensek számára nyújt
 kompatibilitást, a `TransactionControllerV2` osztály pedig a későbbi kliensek számára - ez utóbbi 
-más domain és DTO osztályokat használ. A régi `TransactionController` controller egy egyszerű
+más domain és `DTO` osztályokat használ. A régi `TransactionController` controller egy egyszerű
 _redirect_ az új `TransactionControllerV1` osztályra, ami a `/api/v1/transactions` végponton üzemel.
 
 Az új kliensek számára a `TransactionControllerV2` osztály a `/api/v2/transactions` végponton működik.
@@ -40,7 +40,7 @@ Az új kliensek számára a `TransactionControllerV2` osztály a `/api/v2/transa
 ###  `Service` osztály
 
 A `TransactionService` az új klienseket szolgálja ki, és az egyik legföbb feladata, hogy a régi 
-kliensek felé a kompatibilitást biztosítsa. A szolgáltatása lényegében egy absztakció a data store 
+kliensek felé a kompatibilitást biztosítsa. A szolgáltatása lényegében egy absztrakció a data store 
 és a business entity-k között.
 
 ### Új `Entity` osztályok
@@ -52,7 +52,7 @@ biztosítja, hogy a `TransactionData` és a `Transaction` osztály `data` mezőj
 konzisztens legyen. Figyelni kell a szinkronizálás irányára. Az data store-ból történő lekérdezés során
 a `data` mezőt tekintjük irányadónak, hiszen számítani lehet rá, hogy egy régi kliens az új adatmodell
 ismerete nélkül módosította. Egy új `TransactionV2` entitás létrehozásakor természetesen a `TransactionData`
-típusú mezőt tartalma az irányadó, hiszen egy ilyen entitás létrhozására csak az új, a modellt imserő
+típusú mező tartalma az irányadó, hiszen egy ilyen entitás létrehozására csak az új, a modellt ismerő
 kliensek képesek.
 
 ### `DTO` osztályok
@@ -75,8 +75,8 @@ megfelelő `Service` réteg biztosítja a megfelelő konverziót és szinkroniz�
 A __REST__ egy request-reply protokoll. Akármi is történik a szerver oldalon, a kliens mindig egy választ kap.
 Ez kézenfekvővé teszi, hogy az értelmes eredmények mellett a hibákat is értékek reprezentálják, az általában szokásos
 kivételek helyett. A `Vavr`, `Scala` nyelvből kölcsönzött `Try` és `Either` osztályokat használjuk erre a célra.
-A service réteg általában `Either<TranactionError, TransactionV2`-t ad vissza, ami egyaránt képes reprezentálni
-a sikeres végrehajtást és a hibát. Ezt a típust a controller-ben alakítjuk át, a hagyomásnyos módon `ResponseEntity`-ké,
+A service réteg általában `Either<TranactionError, TransactionV2>`-t ad vissza, ami egyaránt képes reprezentálni
+a sikeres végrehajtást és a hibát. Ezt a típust a controller-ben alakítjuk át, a hagyományos módon `ResponseEntity`-ké,
 illetve Exception-ökké. Az `Exception`-öket végül egy `ControllerAdvice` osztályban képezzük le értelmezhető
 hibaüzenetekké.
 
@@ -93,8 +93,8 @@ ellenőrzése.
 
 Nem elegáns (bár értelmes) hogy a `Transaction` és a `TransactionV2` osztály kapcsolata nincs kifejzeve a JPA
 mappingek szintjén. Az adattartalom konzisztenciáját csak a service réteg biztosítja. Alternatív megoldás lehetne,
-ha a `TransactionV2` leszármazna a `Transaction` osztályból, és a JPA-ban szokásos `JOINED` öröklségi stratégiát
-alkalmaznánk. Előnyként az egyszerűbb perzisztencia jelentkezik. Ami ebben az esetben problémát jelenthetne az az, 
+ha a `TransactionV2` leszármazna a `Transaction` osztályból, és a JPA-ban szokásos `JOINED` öröklési stratégiát
+alkalmaznánk. Előnyként az egyszerűbb perzisztencia jelentkezik. Ami ebben az esetben problémát jelenthetne, az az, 
 hogy a `Transaction` osztály `data` mezőjének  konzisztenciáját a többi mezővel még ebben az esetben sem lehetne 
 csak a JPA mappingek szintjén biztosítani.
 
